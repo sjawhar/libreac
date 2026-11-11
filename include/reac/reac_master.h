@@ -481,6 +481,10 @@ struct reac_master {
  * run again. Pacer thread only, like every other reac_master call. */
 void reac_master_identity_answered(struct reac_master *m, int complete);
 
+/* PROBE (OSSV-267 measurement, not for upstream): credit the master with a
+ * transfer another composer delivered. */
+void reac_master_credit_transfer(struct reac_master *m);
+
 /* Initialize for a given source MAC, console config + frame rate (3675/4000/
  * 8000 fps). `src` is OUR master L2 MAC (Roland OUI); it is stamped into the
  * generated cfea so the announced identity equals the L2 source. `cfg` is the

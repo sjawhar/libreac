@@ -1029,6 +1029,16 @@ void reac_master_identity_answered(struct reac_master *m, int complete)
 		m->identity_complete = complete ? 1 : 0;
 }
 
+/* PROBE (OSSV-267 measurement, not for upstream): a transfer of this scene was
+ * delivered to the box by a composer that shares this master's body. */
+void reac_master_credit_transfer(struct reac_master *m)
+{
+	if (!m)
+		return;
+	m->scene_inflight = 0;
+	m->scene_complete = 1;
+}
+
 static void enter_established(struct reac_master *m)
 {
 	m->state = REAC_M_ESTABLISHED;
