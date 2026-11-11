@@ -86,14 +86,14 @@
 
 #include <stdint.h>
 
-#define REAC_PORTS_TABLE_OFF   8   /* table start, block-relative           */
-#define REAC_PORTS_TABLE_SLOTS 12  /* 12 slots x 4 ch = the 48-ch fabric    */
-#define REAC_PORTS_CH_PER_SLOT 4
-
-#define REAC_PORT_SLOT_OUT   0x01
-#define REAC_PORT_SLOT_IN    0x02
-#define REAC_PORT_SLOT_EMPTY 0x03
-#define REAC_PORT_SLOT_IN_SPLIT 0x00
+/* GENERATED, not hand-written: the inventory group of reac-protocol's
+ * spec/protocol-facts.yaml (PORTS_TABLE_OFF/SLOTS, PORTS_CH_PER_SLOT and the
+ * four slot codes), emitted by tools/gen-facts-header.py and held to the
+ * schema by `make facts-drift-check`. */
+#include <reac/reac_facts_inventory.h>
+/* The head-amp group, same source: BASE_MULTIPLIER, the two law rows and
+ * APPLY_UNIT_SLOTS below all come from it. */
+#include <reac/reac_facts_head_amp.h>
 
 struct reac_box_ports {
 	int in_ch;    /* declared input width  (4 per input slot)  */
@@ -157,14 +157,11 @@ int reac_ports_unknown(const uint8_t block[32], uint8_t *first_code);
 /* block-relative offset of the chassis strap the base is built from */
 #define REAC_HEADAMP_BASE_OFF 7
 
-/* base = block[REAC_HEADAMP_BASE_OFF] * this. Sixteen head-amp rows per strap
- * step, which is two REAC_HEADAMP_APPLY_UNIT_SLOTS groups. */
-#define REAC_HEADAMP_BASE_MULTIPLIER 0x10
-
-/* The law rows, spelled so protocol-facts.yaml can bind them and so a change
- * of mind has to edit a constant rather than drift a comment. */
-#define REAC_HEADAMP_BASE_FROM_CONFIG_BYTE7    1
-#define REAC_HEADAMP_BASE_IS_CHASSIS_NOT_GRANT 1
+/* base = block[REAC_HEADAMP_BASE_OFF] * REAC_HEADAMP_BASE_MULTIPLIER. Sixteen
+ * head-amp rows per strap step, which is two REAC_HEADAMP_APPLY_UNIT_SLOTS
+ * groups. The multiplier and the two law rows
+ * (REAC_HEADAMP_BASE_FROM_CONFIG_BYTE7,
+ * REAC_HEADAMP_BASE_IS_CHASSIS_NOT_GRANT) are generated above. */
 
 /* THE BOX APPLIES HEAD-AMP IN GROUPS OF EIGHT fabric rows, one 8-port board at
  * a time, passing the within-group index 0..7 to the preamp (S-1608.BIN
@@ -175,6 +172,6 @@ int reac_ports_unknown(const uint8_t block[32], uint8_t *first_code);
  * channel that is not a multiple of four, and writing phantom off to a group
  * neighbour of a live condenser left that mic ~45 dB above the floor. Neither
  * number is evidence about the other; do not fold them together. */
-#define REAC_HEADAMP_APPLY_UNIT_SLOTS 8
+/* REAC_HEADAMP_APPLY_UNIT_SLOTS is generated above. */
 
 #endif /* REAC_PORTS_H */

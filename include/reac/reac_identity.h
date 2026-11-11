@@ -71,10 +71,12 @@
 /* DT1 tag of the identity page: the high half of the Roland 4-byte address. */
 #define REAC_IDENTITY_TAG 0x0500u
 
-/* The `addr_lo` selectors this decode understands (reac.ksy `identity_addr`). */
-#define REAC_IDENTITY_ADDR_FIRMWARE 0x0000u
-#define REAC_IDENTITY_ADDR_REAC_VERSION 0x0600u
-#define REAC_IDENTITY_ADDR_MODEL_NAME 0x1000u
+/* The `addr_lo` selectors this decode understands (reac.ksy `identity_addr`).
+ * GENERATED, not hand-written: the identity_page group of reac-protocol's
+ * spec/protocol-facts.yaml, emitted by tools/gen-facts-header.py and held to
+ * the schema by `make facts-drift-check`. */
+#include <reac/reac_facts_identity_page.h>
+#define REAC_IDENTITY_ADDR_FIRMWARE REAC_IDENTITY_ADDR_FIRMWARE_VERSION
 
 /* The 16-byte ASCII model name plus its NUL terminator. */
 #define REAC_IDENTITY_NAME_CAP 17u

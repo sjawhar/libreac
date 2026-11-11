@@ -34,14 +34,27 @@
 #include <stdint.h>
 #include <stddef.h>
 
+/* GENERATED, not hand-written: the control_block, control_header, frame_fields,
+ * dt1_tag, dt1_frame, scene, scene_body, head_amp and headamp_sens groups of
+ * reac-protocol's spec/protocol-facts.yaml, emitted by
+ * tools/gen-facts-header.py and held to the schema by `make facts-drift-check`.
+ * The names this header used to write by hand are defined there; the few
+ * libreac spells differently are aliased at their old sites below. */
+#include <reac/reac_facts_control_block.h>
+#include <reac/reac_facts_control_header.h>
+#include <reac/reac_facts_frame_fields.h>
+#include <reac/reac_facts_dt1_tag.h>
+#include <reac/reac_facts_dt1_frame.h>
+#include <reac/reac_facts_scene.h>
+#include <reac/reac_facts_scene_body.h>
+#include <reac/reac_facts_head_amp.h>
+#include <reac/reac_facts_headamp_sens.h>
+
 /* ---- the control block ----------------------------------------------------
  * A REAC frame carries a 32-byte control block at [18:50]; the last byte of it
  * is a checksum. FILLER frames (type 0x0000) carry audio there instead and are
  * checksum-exempt. */
-#define REAC_CTRL_BLOCK_OFF   18   /* control block / checksum region start */
-#define REAC_CTRL_BLOCK_END   50   /* one past end (= audio offset)         */
-#define REAC_CTRL_CKSUM_OFF   49   /* checksum byte (last of the block)     */
-#define REAC_CTRL_BLOCK_LEN   32   /* the checksummed block, [18:50]        */
+/* REAC_CTRL_BLOCK_OFF/END/LEN and REAC_CTRL_CKSUM_OFF are generated above. */
 
 /* Set the block's last byte so the 32 bytes sum to 0 mod 256. */
 void reac_ctrl_block_cksum_stamp(uint8_t block[REAC_CTRL_BLOCK_LEN]);
@@ -83,14 +96,14 @@ int  reac_ctrl_record_cksum_verify(const uint8_t *rec, size_t n);
  * distinct length, so switching on it appears to work — right up to a window
  * that is not full.
  */
-#define REAC_LINK_CTRL     1   /* the stagebox control link                    */
-#define REAC_LINK_SECOND   2   /* an S-4000S-only second link                  */
-#define REAC_LINK_RECORD   4   /* the record link — DT1 containers             */
+#define REAC_LINK_CTRL     REAC_LINK_CONTROL     /* the stagebox control link  */
+#define REAC_LINK_SECOND   REAC_LINK_AUX_S4000S  /* an S-4000S-only second link*/
+/* REAC_LINK_RECORD (the record link — DT1 containers) is generated above. */
 
-#define REAC_SEG_MIDDLE 0x00   /* neither bit: a continuation                  */
-#define REAC_SEG_FIRST  0x01   /* bit 0                                        */
-#define REAC_SEG_LAST   0x02   /* bit 1                                        */
-#define REAC_SEG_SINGLE 0x03   /* both: a complete message in one frame        */
+/* REAC_SEG_MIDDLE (continuation) and REAC_SEG_SINGLE (a complete message in one
+ * frame) are generated above. */
+#define REAC_SEG_FIRST  REAC_SEG_FIRST_BIT   /* bit 0                          */
+#define REAC_SEG_LAST   REAC_SEG_LAST_BIT    /* bit 1                          */
 
 /* Link-1 opcodes, block[4]. */
 #define REAC_OP_BULK       0x00  /* the scene push, in all four segment states */
@@ -106,14 +119,12 @@ int  reac_ctrl_record_cksum_verify(const uint8_t *rec, size_t n);
  * the model id, block[15] the command, block[16:18] the register page (the TAG),
  * and the record the two checksums enclose runs block[16..21]. Frame-relative
  * that is [32], [33], [34:36] and [34..39]. */
-#define REAC_DT1_MODEL_LO  0x12
-#define REAC_DT1_CMD_RQ1   0x11  /* a request                                  */
-#define REAC_DT1_CMD_DT1   0x12  /* a set                                      */
-#define REAC_DT1_TAG_HEAD_MARK 0x0000
-#define REAC_DT1_TAG_JOIN      0x0100
-#define REAC_DT1_TAG_HEADAMP   0x0101
-#define REAC_DT1_TAG_BOX_READY 0x0302
-#define REAC_DT1_TAG_IDENTITY  0x0500
+#define REAC_DT1_MODEL_LO  REAC_DT1_MODEL_ID_LO
+#define REAC_DT1_CMD_RQ1   REAC_DT_CMD_RQ1  /* a request                       */
+#define REAC_DT1_CMD_DT1   REAC_DT_CMD_DT1  /* a set                           */
+#define REAC_DT1_TAG_JOIN      REAC_DT1_TAG_JOIN_GRANT
+#define REAC_DT1_TAG_HEADAMP   REAC_DT1_TAG_HEAD_AMP
+/* REAC_DT1_TAG_HEAD_MARK, _BOX_READY and _IDENTITY are generated above. */
 
 /* ---- THE SCENE PUSH: the master's enrolment transfer -----------------------
  *
@@ -138,12 +149,8 @@ int  reac_ctrl_record_cksum_verify(const uint8_t *rec, size_t n);
  * Measured on a real M-200i driving an S-1608: the 341 chunks go out back-to-back
  * in 0.680 s, the box answers 01 03 0010 once the transfer completes, and only
  * then does the desk open its grant window. */
-#define REAC_SCENE_BYTES        8904   /* == 0x22c8, the declared total          */
-#define REAC_SCENE_HEAD_BYTES     24   /* body bytes in the FIRST frame          */
-#define REAC_SCENE_CHUNK_BYTES    26   /* body bytes per MIDDLE frame            */
-#define REAC_SCENE_TAIL_BYTES     14   /* body bytes in the LAST frame           */
-#define REAC_SCENE_CHUNKS        341   /* MIDDLE count for a whole body          */
-#define REAC_SCENE_STEPS   (1 + REAC_SCENE_CHUNKS + 1)
+/* REAC_SCENE_BYTES (0x22c8, the declared total), _HEAD_BYTES, _CHUNK_BYTES,
+ * _TAIL_BYTES, _CHUNKS and _STEPS are generated above. */
 
 /* THE LAST STEP'S TRAILER. The LAST frame fills the same 26-byte payload slot as a
  * MIDDLE one, block[5:31], and declares only REAC_SCENE_TAIL_BYTES of it as body: the
@@ -158,13 +165,12 @@ int  reac_ctrl_record_cksum_verify(const uint8_t *rec, size_t n);
  * promotes NOTHING if any one misses, while the transfer still looks complete
  * from outside. "1234" rides the FIRST frame; SYSP and SCEN ride MIDDLE frames
  * 32 and 33, so a body whose middle is wrong fails silently. */
-#define REAC_SCENE_TAG_ID_OFF    0x000   /* "1234" — rides the FIRST frame     */
-#define REAC_SCENE_TAG_SYSP_OFF  0x368   /* "SYSP" — rides MIDDLE frame 32     */
-#define REAC_SCENE_TAG_SCEN_OFF  0x37c   /* "SCEN" — rides MIDDLE frame 33     */
+/* REAC_SCENE_TAG_ID_OFF ("1234", the FIRST frame), _SYSP_OFF (MIDDLE 32) and
+ * _SCEN_OFF (MIDDLE 33) are generated above. */
 
 /* The master's own MAC sits INSIDE the body. On-wire identity must equal the L2
  * source, so a master replaying a recovered body substitutes its own. */
-#define REAC_SCENE_MAC_OFF       0x340   /* = 832 */
+/* REAC_SCENE_MAC_OFF (0x340 = 832) is generated above. */
 
 /* THE RATE CLASS THE BODY RECORDS: `revision`, u2le at +0x14 (reac.ksy
  * scene_body). It carries the PACE CODE (reac_pace_code: 0 = 48 kHz, 1 = 96 kHz,
@@ -179,7 +185,7 @@ int  reac_ctrl_record_cksum_verify(const uint8_t *rec, size_t n);
  * one — and a master that holds it constant can never revise what it declared
  * (rig 2026-08-29: pinned to 1, an S-1608 took 96 kHz and then LATCHED there
  * through a cold boot at 48 kHz). */
-#define REAC_SCENE_REVISION_OFF  0x014
+/* REAC_SCENE_REVISION_OFF is generated above. */
 
 /* Build one step of the transfer into a 34-byte [type|block] template (the shape
  * a master stamps into frame [16:50]), checksum applied. `n` must be
@@ -270,14 +276,14 @@ int reac_ctrl_scene_build(uint8_t *body, size_t n, const uint8_t mac[6]);
  * exact and round-trips; the centi-dB pair is kept because it is the published
  * entry point and because a future finding of sub-dB steps would land in it
  * without moving every caller. */
-#define REAC_HEADAMP_SENS_MAX 0x37   /* 55 — the 56th and last step */
+/* REAC_HEADAMP_SENS_MAX (0x37: 55, the 56th and last step) is generated above. */
 
 /* The curve itself, in HUNDREDTHS of a dBu, public so the schema can bind to it:
  * protocol-facts.yaml's `headamp_sens` group names these three and the generated
  * reac_facts_assert.h refuses to compile if either side moves alone. */
-#define REAC_HEADAMP_SENS_REF_CDB  (-1000)   /* step 0x00, pad off: -10.00 dBu */
-#define REAC_HEADAMP_SENS_STEP_CDB   (100)   /* 1.00 dB, every step */
-#define REAC_HEADAMP_PAD_CDB        (2000)   /* the pad's 20.00 dB */
+/* REAC_HEADAMP_SENS_REF_CDB (step 0x00, pad off: -10.00 dBu),
+ * REAC_HEADAMP_SENS_STEP_CDB (1.00 dB, every step) and REAC_HEADAMP_PAD_CDB
+ * (the pad's 20.00 dB) are generated above. */
 
 /* Sensitivity for a step, in HUNDREDTHS of a dBu. Exact; the inverse round-trips.
  * `pad_on` adds the pad's 20 dB. */
@@ -781,7 +787,7 @@ enum reac_headamp_param {
  * down agreed on the value, so nothing that compared VALUES could see it. The
  * damage was structural: every translation unit including this header warned, and
  * a -Werror consumer could not build at all. One name, one definition, here. */
-#define REAC_HEADAMP_MAX_CH 48
+#define REAC_HEADAMP_MAX_CH REAC_HEADAMP_CH_SPAN
 
 /* Build the head-amp command frame (master->box direction, downstream width:
  * a real console BROADCASTS these interleaved in its stream — pass the
@@ -879,9 +885,8 @@ int reac_ctrl_headamp_record_verify(const uint8_t *frame);
  * The readback nibble is a THIRD axis, per eight, and is named apart because
  * collapsing it into either of the above is how a binding gets this wrong.
  */
-#define REAC_HEADAMP_GRAN_SENS_SHIFT     0   /* EVIDENCED */
-#define REAC_HEADAMP_GRAN_FLAGS_SHIFT    0   /* EVIDENCED */
-#define REAC_HEADAMP_GRAN_PHANTOM_SHIFT  0   /* EVIDENCED (wire, 2026-08-23) */
+/* REAC_HEADAMP_GRAN_SENS_SHIFT, _FLAGS_SHIFT and _PHANTOM_SHIFT are generated
+ * above (all EVIDENCED). */
 #define REAC_HEADAMP_GRAN_READBACK_SHIFT 3   /* EVIDENCED */
 
 /* The group a channel's PARAM addresses, or -1 for a param outside the three.
@@ -901,7 +906,7 @@ int reac_headamp_record_carries(uint8_t ch, uint8_t param);
 /* Three head-amp parameters per channel. A protocol bound, so it lives with the
  * records that carry it rather than in one caller's header.
  * (REAC_HEADAMP_MAX_CH is defined once, above, with the head-amp CH space.) */
-#define REAC_HEADAMP_NPARAMS    3
+#define REAC_HEADAMP_NPARAMS    REAC_HEADAMP_SWEEP_RECORDS_PER_CH
 
 #define REAC_GRANT_GROUPB_LEN   6
 #define REAC_GRANT_SWEEP_LEN(w) (8 + (w) * 3)

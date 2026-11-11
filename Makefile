@@ -114,6 +114,20 @@ $(BUILD_DIR)/reac_facts_master_cadence.h: $(FACTS_SCHEMA) $(FACTS_GEN) $(FACTS_T
 	python3 $(FACTS_TOOL) $(FACTS_SCHEMA) $(FACTS_GEN) $@ \
 	  --groups master_cadence --guard REAC_FACTS_MASTER_CADENCE_H
 
+# R1: THE GROUPS LIBREAC USED TO HAND-WRITE. Every define that was spelled out in
+# include/reac/reac.h, reac_ctrlblk.h, reac_identity.h and reac_ports.h now comes
+# from reac-protocol's schema through these headers, committed so a standalone
+# build and an installed -devel have them, and held to the schema by the gate below.
+R1_FACTS_GROUPS := frame_geometry control_block control_header frame_fields \
+                   dt1_tag dt1_frame scene scene_body head_amp headamp_sens \
+                   identity_page inventory
+R1_FACTS_BUILT  := $(addprefix $(BUILD_DIR)/reac_facts_,$(addsuffix .h,$(R1_FACTS_GROUPS)))
+
+$(R1_FACTS_BUILT): $(BUILD_DIR)/reac_facts_%.h: $(FACTS_SCHEMA) $(FACTS_GEN) $(FACTS_TOOL)
+	@mkdir -p $(BUILD_DIR)
+	python3 $(FACTS_TOOL) $(FACTS_SCHEMA) $(FACTS_GEN) $@ \
+	  --groups $* --guard "REAC_FACTS_$$(echo $* | tr a-z A-Z)_H"
+
 # The drift gate: only meaningful when the schema is reachable (nothing to
 # compare the fallback against otherwise). Regenerates and diffs against the
 # committed tests/reac_facts_assert.h; a difference fails the build rather
@@ -121,7 +135,8 @@ $(BUILD_DIR)/reac_facts_master_cadence.h: $(FACTS_SCHEMA) $(FACTS_GEN) $(FACTS_T
 .PHONY: facts-drift-check
 ifeq ($(HAVE_SCHEMA),1)
 facts-drift-check: $(BUILD_DIR)/reac_facts_assert.h $(BUILD_DIR)/reac_facts_box_width.h \
-                   $(BUILD_DIR)/reac_facts_timing.h $(BUILD_DIR)/reac_facts_master_cadence.h
+                   $(BUILD_DIR)/reac_facts_timing.h $(BUILD_DIR)/reac_facts_master_cadence.h \
+                   $(R1_FACTS_BUILT)
 	@diff -u tests/reac_facts_assert.h $(BUILD_DIR)/reac_facts_assert.h || \
 	  { echo "tests/reac_facts_assert.h has drifted from $(FACTS_SCHEMA)."; \
 	    echo "Refresh it: cp $(BUILD_DIR)/reac_facts_assert.h tests/reac_facts_assert.h"; \
@@ -138,6 +153,12 @@ facts-drift-check: $(BUILD_DIR)/reac_facts_assert.h $(BUILD_DIR)/reac_facts_box_
 	  { echo "include/reac/reac_facts_master_cadence.h has drifted from $(FACTS_SCHEMA)."; \
 	    echo "Refresh it: cp $(BUILD_DIR)/reac_facts_master_cadence.h include/reac/reac_facts_master_cadence.h"; \
 	    exit 1; }
+	@for g in $(R1_FACTS_GROUPS); do \
+	  diff -u include/reac/reac_facts_$$g.h $(BUILD_DIR)/reac_facts_$$g.h || \
+	    { echo "include/reac/reac_facts_$$g.h has drifted from $(FACTS_SCHEMA)."; \
+	      echo "Refresh it: cp $(BUILD_DIR)/reac_facts_$$g.h include/reac/reac_facts_$$g.h"; \
+	      exit 1; }; \
+	done
 else
 facts-drift-check:
 	@echo "REAC_PROTOCOL not reachable at $(REAC_PROTOCOL); skipping the facts drift gate (standalone build, using the shipped tests/reac_facts_assert.h)"

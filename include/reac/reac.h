@@ -15,18 +15,11 @@
 extern "C" {
 #endif
 
-/* ---- REAC wire constants ---- */
-#define REAC_ETHERTYPE        0x8819  /* non-IP EtherType */
-#define REAC_FRAME_BYTES      1492    /* fixed downstream frame: 50 hdr + 1440 audio + 2 end */
-#define REAC_AUDIO_BYTES      1440    /* 40 ch x 12 samples x 3 B (rate-invariant) */
-#define REAC_AUDIO_OFFSET     50      /* audio block starts here (= L2 header length) */
-#define REAC_L2_HEADER_LEN    50      /* 14 eth + 2 counter + 2 type + 32 control */
-#define REAC_MAX_CHANNELS     40
-#define REAC_SAMPLES_PER_PKT  12      /* downstream: 12 samples/frame at every rate */
-#define REAC_RESOLUTION       3       /* bytes per sample per channel (24-bit) */
-#define REAC_HDR_COUNTER_OFF  14      /* u16 little-endian sequence counter */
-#define REAC_END_MARKER_0     0xC2    /* last two bytes of a full frame */
-#define REAC_END_MARKER_1     0xEA
+/* ---- REAC wire constants ----
+ * GENERATED, not hand-written: the frame_geometry group of reac-protocol's
+ * spec/protocol-facts.yaml, emitted by tools/gen-facts-header.py and held to
+ * the schema by `make facts-drift-check`. */
+#include <reac/reac_facts_frame_geometry.h>
 
 /* Some captures carry 2 extra bytes AFTER the C2 EA end marker. They are NOT a
  * REAC protocol field: they are the low 16 bits of the frame's own Ethernet FCS
@@ -62,8 +55,8 @@ extern "C" {
  *     frame_len = REAC_UPSTREAM_OVERHEAD + n_channels * REAC_UPSTREAM_BYTES_PER_CH
  *     S-1608 -> 16 ch -> 628 B;  S-0808 -> 8 ch -> 340 B;  S-4000 -> 32 ch -> 1204 B
  * (the downstream 1492 B broadcast is the 40-ch solution of the same formula). */
-#define REAC_UPSTREAM_OVERHEAD     52  /* 50 B header + 2 B end marker */
-#define REAC_UPSTREAM_BYTES_PER_CH 36  /* 12 samples x 3 B */
+#define REAC_UPSTREAM_OVERHEAD     REAC_FRAME_OVERHEAD    /* 50 B header + 2 B end marker */
+#define REAC_UPSTREAM_BYTES_PER_CH REAC_BYTES_PER_CHANNEL /* 12 samples x 3 B */
 
 /* A BOX'S WIDTH, EITHER DIRECTION. Operator ruling 2026-09-25: "BOX_MAX_CHANNELS =
  * 40. We are dealing with a S-4000S-3208 (32 in, 8 out), we also have S-2416 (24 in,
