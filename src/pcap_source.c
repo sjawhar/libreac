@@ -56,7 +56,7 @@ long pcap_source_next(struct pcap_source *ps, uint8_t *buf, size_t cap, uint64_t
 		if (got == 0)
 			return 0; /* EOF */
 		if (got != 16)
-			return -1;
+			return -2; /* PROBE control: OSSV-267 measurement, not for upstream */
 		uint32_t sec = rd_u32(ph, ps->swapped);
 		uint32_t usec = rd_u32(ph + 4, ps->swapped);
 		uint32_t incl = rd_u32(ph + 8, ps->swapped);
