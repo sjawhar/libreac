@@ -374,6 +374,7 @@ struct reac_master {
 	int      commit_seen;
 	int      scene_inflight;  /* header emitted, final not yet                  */
 	unsigned scene_complete;  /* transfers delivered whole since enter_probing  */
+	int      scene_credited;  /* PROBE: a composer sharing this body delivered one */
 	int      join_held;       /* a forward edge is waiting on the transfer      */
 	enum reac_master_rx_event join_ev;    /* the held event                     */
 	uint8_t  join_src[6];                 /* and its box                        */
@@ -480,6 +481,10 @@ struct reac_master {
  * the hw block). Non-zero stops the re-poll; zero (a new box, a dropped one) lets it
  * run again. Pacer thread only, like every other reac_master call. */
 void reac_master_identity_answered(struct reac_master *m, int complete);
+
+/* PROBE (OSSV-267 measurement, not for upstream): credit the master with a
+ * transfer another composer delivered; it survives the IDLE -> PROBING step. */
+void reac_master_credit_transfer(struct reac_master *m);
 
 /* Initialize for a given source MAC, console config + frame rate (3675/4000/
  * 8000 fps). `src` is OUR master L2 MAC (Roland OUI); it is stamped into the

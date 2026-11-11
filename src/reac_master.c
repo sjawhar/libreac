@@ -943,7 +943,8 @@ static void enter_probing(struct reac_master *m)
 	/* A fresh courtship pushes a fresh scene: nothing delivered, nothing in
 	 * flight, no edge held over from the last one. */
 	m->scene_inflight = 0;
-	m->scene_complete = 0;
+	m->scene_complete = (!backward && m->scene_credited) ? 1 : 0;
+	m->scene_credited = 0;
 	m->join_held      = 0;
 	m->commit_seen    = 0;   /* a new courtship re-pushes and re-commits */
 	if (backward)
@@ -1027,6 +1028,20 @@ void reac_master_identity_answered(struct reac_master *m, int complete)
 {
 	if (m)
 		m->identity_complete = complete ? 1 : 0;
+}
+
+/* PROBE (OSSV-267 measurement, not for upstream): a transfer of this scene was
+ * delivered to the box by a composer that shares this master's body. */
+void reac_master_credit_transfer(struct reac_master *m)
+{
+	if (!m)
+		return;
+	if (m->state == REAC_M_IDLE) {
+		m->scene_credited = 1;
+		return;
+	}
+	m->scene_inflight = 0;
+	m->scene_complete = 1;
 }
 
 static void enter_established(struct reac_master *m)
